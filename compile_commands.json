@@ -1,0 +1,38 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Iinclude",
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-c",
+      "-I",
+      "/usr/local/include",
+      "-o",
+      "build/CursedDisplay.o",
+      "src/CursedDisplay.c"
+    ],
+    "directory": "/Users/llewie/homemadetools/curseD",
+    "file": "/Users/llewie/homemadetools/curseD/src/CursedDisplay.c",
+    "output": "/Users/llewie/homemadetools/curseD/build/CursedDisplay.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Iinclude",
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-c",
+      "-I",
+      "/usr/local/include",
+      "-o",
+      "build/test.o",
+      "src/test.c"
+    ],
+    "directory": "/Users/llewie/homemadetools/curseD",
+    "file": "/Users/llewie/homemadetools/curseD/src/test.c",
+    "output": "/Users/llewie/homemadetools/curseD/build/test.o"
+  }
+]
