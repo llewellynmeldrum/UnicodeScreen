@@ -27,13 +27,16 @@ typedef struct cursed_display_settings{
 /* ---------------------------------------------- */
 
 CursedDisplay *createCursedDisplay(CursedDisplaySettings settings);
-void destroyCursedDisplay(CursedDisplay *cdptr);
+void destroyCursedDisplay(CursedDisplay *display);
 
-CDCOLOR getPixel(CursedDisplay *cdptr, int py, int px);
-void setPixel(CursedDisplay *cdptr, int py, int px, CDCOLOR col);
+CDCOLOR getPixel(CursedDisplay *, int py, int px);
+void setPixel(CursedDisplay *, int py, int px, CDCOLOR col);
 
-void refreshDisplay(CursedDisplay *cdptr, float minRefreshTime);
+void refreshDisplay(CursedDisplay *, float minRefreshTime);
 
 void printDisplay(CursedDisplay *);
+
+void writeToDebugWindow(CursedDisplay *display, int line, const char *fmt, ...);
+void waitForInput(CursedDisplay *);
 
 #endif // CURSED_DISPLAY_H
