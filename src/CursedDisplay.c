@@ -1,20 +1,50 @@
+#define _XOPEN_SOURCE_EXTENDED // necessary for wide chars
 #include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <locale.h>
+#include <unistd.h>
 #include "cursed_display_internal.h"
+
 
 // convinience macros
 #define BEGIN_CURSES()	initscr(); 
 #define END_CURSES()	endwin(); 
 
+#define LOCALE "en_AU.UTF-8"
+const wchar_t* TOP_HALF_BLOCK = L"\x2580";
+const wchar_t* SPACE = L"\x0020";
+
 /* ---------------------------------------------- */
 /* ------------- PRIVATE FUNCTIONS -------------- */
 /* ---------------------------------------------- */
+static inline short get_pair_id(short fg, short bg){
+	return (fg+1) * (COLOR_PAIRS+1) + (bg+1);
+}
 
-void init_ncurses(){
+void initColorPairs(short ncolors){
+	for (short fg = -1; fg < ncolors; ++fg)
+	for (short bg = -1; bg < ncolors; ++bg) {
+		short id = get_pair_id(fg, bg);
+		init_pair(id, fg, bg);
+	    }
+
+}
+
+void init_ncurses(CursedDisplay *display){
+	setlocale(LC_ALL, "");
 	BEGIN_CURSES(); // begin curses mode
 	noecho(); // dont care about input for now 
+	if (!has_colors()){
+		destroyCursedDisplay(display);
+		fprintf(stderr, "\n\rERROR: Your terminal does not suppport colors. Terminating.\n\r");
+		exit(EXIT_FAILURE);
+	} else {
+		start_color();
+		use_default_colors();
+	}
+	initColorPairs(COLOR_PAIRS);
 }
 
 WINDOW *createDisplayWindow(CursedDisplay *display){
@@ -83,7 +113,7 @@ CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
 		}
 	}
 
-	init_ncurses(); // do this at the end so we dont fuck with stdout 
+	init_ncurses(display); // do this at the end so we dont fuck with stdout 
 	display->displayWindow = createDisplayWindow(display);
 	display->debugWindow = createDebugWindow(display);
 	
@@ -129,13 +159,32 @@ void setPixel(CursedDisplay *display, int py, int px, CDCOLOR col){
 	return; 
 }
 
+
 void refreshDisplay(CursedDisplay *display, float minRefreshTime){
 	// ignore minrefresh time for now
-	// display shite
-	// 1. push pixel buffer to ncursesViewbuf
-	
-	// 2. update ncurses
-	wrefresh(display->displayWindow);
+	// dump_display_window(display);
+//	dump_display_window(display);
+	for (int py = 0; py<display->settings.pxHeight-1; py+=2){
+		for (int px = 0; px<display->settings.pxWidth; px++){
+			CDCOLOR top_pixel_color = getPixel(display, py, px);
+			CDCOLOR bot_pixel_color = getPixel(display, py+1, px);
+			short ch_col_pair_id = get_pair_id(top_pixel_color, bot_pixel_color);
+			int row = py/2;
+			int col = px;
+			//attron(COLOR_PAIR(ch_col_pair_id));
+//			wmove(display->displayWindow, row, col);
+//			waddwstr(display->displayWindow, TOP_HALF_BLOCK);
+//			mvwaddnwstr(display->displayWindow, row, col, TOP_HALF_BLOCK, 1);
+			//mvwadd_wch(display->displayWindow, row, col, TOP_HALF_BLOCK);
+			cchar_t cchar;
+			wchar_t glyph[2] = { 0x2580, 0 };
+			setcchar(&cchar, glyph, 0, ch_col_pair_id, NULL);
+			mvwadd_wch(display->displayWindow, row, col, &cchar);
+			//attroff(COLOR_PAIR(ch_col_pair_id));
+		}
+	}
+	dump_display_window(display);
+	wrefresh(display->displayWindow); // 2. update ncurses
 	
 	// debug shite
 	// 1. push pixel buffer to ncursesViewbuf
@@ -146,6 +195,42 @@ void waitForInput(CursedDisplay *display){
 	wgetch(display->displayWindow);
 }
 
+
+static void dump_wstr(const wchar_t *ws){
+    for (size_t i = 0; ws[i] != L'\0'; ++i) {
+        printf("U+%04X\'%lc\'\r", (unsigned int)ws[i],  ws[i]);
+    }
+}
+void dump_display_window(CursedDisplay *display){
+	printf("\n\r----- DISPLAY DUMP -----\n\r");
+	wchar_t thb[2];
+	wchar_t sp[2];
+	printf("\rFOR REFERENCE:\r");
+	printf("TOP_HALF_BLOCK = "); dump_wstr(TOP_HALF_BLOCK);
+	printf("SPACE (SP) = "); dump_wstr(SPACE);
+	for(int row = 0; row<display->chRows; row++){
+		for (int col = 0; col<display->chCols; col++){
+			cchar_t cch; 
+			mvwin_wch(display->displayWindow, row, col, &cch);
+			wchar_t wc[2];
+			attr_t attr; short col;
+			getcchar(&cch, wc, &attr, &col, NULL);
+			printf("U+%04X ", wc[0]);
+		}
+		printf("\r\n");
+	}
+	for(int row = 0; row<display->chRows; row++){
+		for (int col = 0; col<display->chCols; col++){
+			cchar_t cch; 
+			mvwin_wch(display->displayWindow, row, col, &cch);
+			wchar_t wc[2];
+			attr_t attr; short col;
+			getcchar(&cch, wc, &attr, &col, NULL);
+			printf("%lc", wc[0]);
+		}
+		printf("\r\n");
+	}
+}
 void writeToDebugWindow(CursedDisplay *display, int line, const char* fmt, ...){
 	if (line >= DEBUG_WIN_ROWS){
 		mvwprintw(display->debugWindow, 0, 0, "DEBUGLINE_ERR");

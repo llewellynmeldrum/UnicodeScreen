@@ -1,7 +1,7 @@
 #include "cursed_display.h"
 #include <stdio.h>
-#define DISPLAY_HEIGHT 20
-#define DISPLAY_WIDTH 20
+#define DISPLAY_HEIGHT 10
+#define DISPLAY_WIDTH 10
 
 #define DEBUG
 
@@ -11,8 +11,10 @@ int main(){
 		printf("CursedDisplay returned null.\n");
 	}
 	printf("Successfully Created cursed display @%p\n\r", display);
-	for (int i = 0; i<DISPLAY_HEIGHT; i++){
-		setPixel(display, i,i, CDCOLOR_BLUE);
+	for (int y = 0; y<2; y++){
+		for (int x = 0; x<DISPLAY_WIDTH; x++){
+			setPixel(display, y, x, x);
+		}
 	}
 	printDisplay(display);
 	writeToDebugWindow(display,0, "DEBUG WINDOW:");

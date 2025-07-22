@@ -15,9 +15,10 @@ struct cursed_display{
 	WINDOW* debugWindow;
 };
 
-void init_ncurses();
+void init_ncurses(CursedDisplay *display);
 WINDOW *createDisplayWindow(CursedDisplay *display);
 WINDOW *createDebugWindow(CursedDisplay *display); // debug window should sit below and be 
 void end_ncurses();
 
+void dump_display_window(CursedDisplay *display);
 #endif // CURSED_DISPLAY_INTERNAL_H

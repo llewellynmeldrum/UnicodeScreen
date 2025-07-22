@@ -3,14 +3,14 @@
 
 /* FOR PUBLIC */
 typedef enum{
-	CDCOLOR_BLACK   = 0,
-        CDCOLOR_RED     = 1,
-        CDCOLOR_GREEN   = 2,
-        CDCOLOR_YELLOW  = 3,
-        CDCOLOR_BLUE    = 4,
-        CDCOLOR_MAGENTA = 5,
-        CDCOLOR_CYAN    = 6,
-        CDCOLOR_WHITE   = 7,
+        CDCOLOR_GREEN   = 0,
+        CDCOLOR_YELLOW  = 1,
+        CDCOLOR_BLUE    = 2,
+        CDCOLOR_MAGENTA = 3,
+        CDCOLOR_CYAN    = 4,
+        CDCOLOR_WHITE   = 5,
+	CDCOLOR_BLACK   = 6,
+        CDCOLOR_RED     = 7,
 } CDCOLOR;
 
 
