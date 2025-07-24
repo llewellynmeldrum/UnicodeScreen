@@ -4,10 +4,19 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <locale.h>
+#include <string.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include "cursed_display_internal.h"
 
 
+#define DEBUG_MAX_LC 256 
+#define DEBUG_MAX_LL 256 
+char debuglines[DEBUG_MAX_LC][DEBUG_MAX_LL];
+
+int debuglc = 0;
+
+#define N_COLORS 8
 // convinience macros
 #define BEGIN_CURSES()	initscr(); 
 #define END_CURSES()	endwin(); 
@@ -16,11 +25,12 @@
 const wchar_t* TOP_HALF_BLOCK = L"\x2580";
 const wchar_t* SPACE = L"\x0020";
 
+
 /* ---------------------------------------------- */
 /* ------------- PRIVATE FUNCTIONS -------------- */
 /* ---------------------------------------------- */
 static inline short get_pair_id(short fg, short bg){
-	return (fg+1) * (COLOR_PAIRS+1) + (bg+1);
+	return (fg+1) * (N_COLORS+1) + (bg+1);
 }
 
 void initColorPairs(short ncolors){
@@ -44,7 +54,7 @@ void init_ncurses(CursedDisplay *display){
 		start_color();
 		use_default_colors();
 	}
-	initColorPairs(COLOR_PAIRS);
+	initColorPairs(N_COLORS);
 }
 
 WINDOW *createDisplayWindow(CursedDisplay *display){
@@ -92,7 +102,7 @@ CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
 
 
 	display->frameBuffer = malloc(sizeof(CDCOLOR *) * display->settings.pxHeight);
-	printf("Allocated space for %d rows.\n", display->settings.pxHeight);
+//	printf("Allocated space for %d rows.\n", display->settings.pxHeight);
 	if (display->frameBuffer==NULL){
 		fprintf(stderr, "Error allocating space for display framebuf. Returning null.\n");
 		free(display);
@@ -101,7 +111,7 @@ CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
 
 	for (int y = 0; y<display->settings.pxHeight; y++){
 		display->frameBuffer[y] = malloc(sizeof(CDCOLOR) * display->settings.pxWidth);
-		printf("Allocated space for %d cols on row %d.\n", display->settings.pxWidth, y);
+	//	printf("Allocated space for %d cols on row %d.\n", display->settings.pxWidth, y);
 		if (display->frameBuffer[y]==NULL){
 			fprintf(stderr, "Error allocating space for framebuf[%d]. Returning null.\n",y);
 			for (int j = 0; j<y; j++){
@@ -159,35 +169,19 @@ void setPixel(CursedDisplay *display, int py, int px, CDCOLOR col){
 	return; 
 }
 
-
 void refreshDisplay(CursedDisplay *display, float minRefreshTime){
-	// ignore minrefresh time for now
-	// dump_display_window(display);
-//	dump_display_window(display);
 	for (int py = 0; py<display->settings.pxHeight-1; py+=2){
 		for (int px = 0; px<display->settings.pxWidth; px++){
 			CDCOLOR top_pixel_color = getPixel(display, py, px);
 			CDCOLOR bot_pixel_color = getPixel(display, py+1, px);
-			short ch_col_pair_id = get_pair_id(top_pixel_color, bot_pixel_color);
+			short pair_id = get_pair_id(top_pixel_color, bot_pixel_color);
 			int row = py/2;
 			int col = px;
-			//attron(COLOR_PAIR(ch_col_pair_id));
-//			wmove(display->displayWindow, row, col);
-//			waddwstr(display->displayWindow, TOP_HALF_BLOCK);
-//			mvwaddnwstr(display->displayWindow, row, col, TOP_HALF_BLOCK, 1);
-			//mvwadd_wch(display->displayWindow, row, col, TOP_HALF_BLOCK);
-			cchar_t cchar;
-			wchar_t glyph[2] = { 0x2580, 0 };
-			setcchar(&cchar, glyph, 0, ch_col_pair_id, NULL);
-			mvwadd_wch(display->displayWindow, row, col, &cchar);
-			//attroff(COLOR_PAIR(ch_col_pair_id));
+			wattron(display->displayWindow,COLOR_PAIR(pair_id));
+			mvwaddwstr(display->displayWindow, row, col, TOP_HALF_BLOCK);
+			wattroff(display->displayWindow, COLOR_PAIR(pair_id));
 		}
 	}
-	dump_display_window(display);
-	wrefresh(display->displayWindow); // 2. update ncurses
-	
-	// debug shite
-	// 1. push pixel buffer to ncursesViewbuf
 	wrefresh(display->debugWindow);
 }
 
@@ -240,5 +234,36 @@ void writeToDebugWindow(CursedDisplay *display, int line, const char* fmt, ...){
 		va_start(args, fmt);
 		vsprintf(fmted_msg, fmt, args);
 		mvwprintw(display->debugWindow, line, 0, fmted_msg);
+	}
+}
+void debug_log_fline(char* fmt, ...){
+	va_list args; 
+	va_start(args, fmt);
+	if (debuglc==DEBUG_MAX_LC){
+		vsprintf(debuglines[debuglc], "END OF DEBUG LINES REACHED", args);
+		va_end(args);
+		return;
+	}
+	vsprintf(debuglines[debuglc], fmt, args);
+	va_end(args);
+	debuglc++;
+}
+
+void debug_log_all(){
+	debug_log_fline("COLOR_PAIRS = %d", COLOR_PAIRS);
+	debug_log_fline("id\tfg\tbg");
+
+	short ncolors = 8; 
+	for (short fg = -1; fg < ncolors; ++fg)
+	for (short bg = -1; bg < ncolors; ++bg){
+	short id = get_pair_id(fg, bg);
+	//	short id = -1;
+		debug_log_fline("%03hd\t%03hd\t%03hd", id, fg, bg);
+	}
+}
+
+void debug_print_log(){
+	for (int line = 0; line<debuglc; line++){
+		printf("%s\n\r", debuglines[line]);
 	}
 }

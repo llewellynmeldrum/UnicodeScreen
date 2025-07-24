@@ -3,16 +3,17 @@
 
 /* FOR PUBLIC */
 typedef enum{
-        CDCOLOR_GREEN   = 0,
-        CDCOLOR_YELLOW  = 1,
-        CDCOLOR_BLUE    = 2,
-        CDCOLOR_MAGENTA = 3,
-        CDCOLOR_CYAN    = 4,
-        CDCOLOR_WHITE   = 5,
-	CDCOLOR_BLACK   = 6,
-        CDCOLOR_RED     = 7,
+        CDCOLOR_BLACK   = 0,
+        CDCOLOR_RED     = 1,
+        CDCOLOR_GREEN   = 2,
+        CDCOLOR_YELLOW  = 3,
+        CDCOLOR_BLUE    = 4,
+        CDCOLOR_PURPLE  = 5,
+	CDCOLOR_CYAN    = 6,
+        CDCOLOR_WHITE   = 7,
 } CDCOLOR;
 
+#define NUM_CDCOLORS 8
 
 typedef struct cursed_display CursedDisplay;
 
@@ -22,6 +23,8 @@ typedef struct cursed_display_settings{
 } CursedDisplaySettings;
 
 
+void debug_log_all();
+void debug_print_log();
 /* ---------------------------------------------- */
 /* -------- PUBLIC INTERFACING FUNCTIONS -------- */
 /* ---------------------------------------------- */

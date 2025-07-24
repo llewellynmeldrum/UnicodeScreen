@@ -41,7 +41,7 @@ CSTD          := -std=c11    # change to -std=gnu11, -std=c99, etc.
 # Warnings & optimizations
 WARNINGS      := 
 # -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wsign-conversion
-OPT           := -O0          # use -O0 for debugging, -Og for dev-friendly opt
+OPT           := -O0
 DEBUGINFO     := -g3          # or -g0 to strip
 
 # Preprocessor flags (e.g., -DDEBUG, include paths). We'll add -I$(INCLUDEDIR) below.
