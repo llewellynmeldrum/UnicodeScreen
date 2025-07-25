@@ -13,7 +13,7 @@
       "build/CursedDisplay.o",
       "src/CursedDisplay.c"
     ],
-    "directory": "/Users/llewie/homemadetools/curseD",
+    "directory": "/Users/llewie/homemadetools/ppm2cursed",
     "file": "/Users/llewie/homemadetools/curseD/src/CursedDisplay.c",
     "output": "/Users/llewie/homemadetools/curseD/build/CursedDisplay.o"
   },

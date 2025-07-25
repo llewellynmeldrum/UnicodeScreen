@@ -32,7 +32,13 @@ const wchar_t* SPACE = L"\x0020";
 static inline short get_pair_id(short fg, short bg){
 	return (fg+1) * (N_COLORS+1) + (bg+1);
 }
+int getDisplayHeight(CursedDisplay *d){
+	return d->settings.pxHeight;
+}
 
+int getDisplayWidth(CursedDisplay *d){
+	return d->settings.pxWidth;
+}
 void initColorPairs(short ncolors){
 	for (short fg = -1; fg < ncolors; ++fg)
 	for (short bg = -1; bg < ncolors; ++bg) {

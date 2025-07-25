@@ -15,6 +15,7 @@ struct cursed_display{
 	WINDOW* debugWindow;
 };
 
+
 void init_ncurses(CursedDisplay *display);
 WINDOW *createDisplayWindow(CursedDisplay *display);
 WINDOW *createDebugWindow(CursedDisplay *display); // debug window should sit below and be 

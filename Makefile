@@ -26,7 +26,7 @@
 # -----------------------------------------------------------------------------
 
 # Final executable name (no path)
-PROJECT       := cdTest
+PROJECT       := ppm2cursed
 
 # Directory names (relative paths). DO NOT end with a slash.
 SRCDIR        := src
