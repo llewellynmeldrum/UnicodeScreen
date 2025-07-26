@@ -1,7 +1,7 @@
 # img2uniscr 
 Turns your terminal into a (terrible) screen, making use of the "▀" unicode glyph, each row of your terminal becomes two rows of 3-bit RGB pixels. 
 
-![Demonstration screenshot showing cat.](assets/examples/tinycat_ppm.png "Demonstration:")
+<img src="assets/examples/tinycat_ppm.png" alt="Demonstration screenshot showing cat." width="200"/>
 *here you can see the *beautiful* 3 bit color depth.*
 # Usage 
 This project is structured in such a way that UniScreen.h will be able to be implemented as a library for creating displays. img2uniscr is designed to run on top of that, parsing, compressing, and displaying the images through UniScreen. 
