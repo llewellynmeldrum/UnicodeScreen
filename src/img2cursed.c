@@ -1,4 +1,4 @@
-#include "cursed_display.h"
+#include "unicode_screen.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -20,11 +20,11 @@
 RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);
 Image openPPM(const char* path);
 int indexIntoFlatCM(int y, int x, int width);
-int pushImageToDisplay(CursedDisplay *display, Image image);
+int pushImageToDisplay(UnicodeScreen *display, Image image);
 CDCOLOR getClosestCDCOLOR(RGB pixel);
 void initCDCOLOR_RGBVAL();
 
-char CDCOLOR_str[NUM_CDCOLORS][7] = {
+char CDCOLOR_str[N_CDCOLORS][7] = {
         "BLACK",
         "RED",
         "GREEN",
@@ -61,11 +61,16 @@ int main(int argc, char** argv){
 		fprintf(stderr, "FAILED TO OPEN FILE %s.\n", image_path); 
 		exit(EXIT_FAILURE);
 	}
-	CursedDisplaySettings displaySize = (CursedDisplaySettings){
+	UnicodeScreenSettings displaySettings = (UnicodeScreenSettings){
 		.pxHeight = image.height,
 		.pxWidth = image.width,
 	};
-	CursedDisplay *display = createCursedDisplay(displaySize);
+
+	UnicodeScreen *display = createCursedDisplay(displaySettings);
+	if (display==NULL){
+		fprintf(stderr, "Exiting.\n"); 
+		exit(EXIT_FAILURE);
+	}
 	pushImageToDisplay(display, image);
 	refreshDisplay(display, 0);
 	waitForInput(display);
@@ -76,7 +81,7 @@ int main(int argc, char** argv){
 
 
 
-int pushImageToDisplay(CursedDisplay *display, Image image){
+int pushImageToDisplay(UnicodeScreen *display, Image image){
 	int displayHeight = getDisplayHeight(display);
 	int displayWidth = getDisplayWidth(display);
 	if (displayHeight != image.height || displayWidth != image.width){
@@ -97,7 +102,7 @@ CDCOLOR getClosestCDCOLOR(RGB pixel){
 	// i.e rDiff + gDiff + bDiff < all the others.
 	uint32_t min_diffsum = RGB_MAX;
 	int nearestcol_idx = 0;
-	for (int i = 0; i<NUM_CDCOLORS; i++){
+	for (int i = 0; i<N_CDCOLORS; i++){
 		RGB col = CDCOLOR_RGBVAL[i];
 		uint32_t rDiff = abs(pixel.r - col.r);
 		uint32_t gDiff = abs(pixel.g - col.g);
@@ -115,6 +120,7 @@ CDCOLOR getClosestCDCOLOR(RGB pixel){
 Image openPPM(const char* path){
 	FILE *fptr = fopen(path, "rb");
 	int height, width, err;
+	err = 0;
 	RGB* pixels = getPixels_PPM(fptr, &height, &width); 
 	if (pixels==NULL){
 		fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
@@ -135,6 +141,7 @@ int fscan_StringToInt(FILE* fp){
 	fscanf(fp, " %s ", temp);
 	return atoi(temp); 
 }
+
 RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p){ 
 //	printf("\n\r"); // fixes broken carriage return shit
 	char P, six; 

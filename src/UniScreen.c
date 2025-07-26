@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include "cursed_display_internal.h"
+#include "unicode_screen_internal.h"
 
 
 #define DEBUG_MAX_LC 256 
@@ -16,7 +16,6 @@ char debuglines[DEBUG_MAX_LC][DEBUG_MAX_LL];
 
 int debuglc = 0;
 
-#define N_COLORS 8
 // convinience macros
 #define BEGIN_CURSES()	initscr(); 
 #define END_CURSES()	endwin(); 
@@ -30,13 +29,13 @@ const wchar_t* SPACE = L"\x0020";
 /* ------------- PRIVATE FUNCTIONS -------------- */
 /* ---------------------------------------------- */
 static inline short get_pair_id(short fg, short bg){
-	return (fg+1) * (N_COLORS+1) + (bg+1);
+	return (fg+1) * (N_CDCOLORS+1) + (bg+1);
 }
-int getDisplayHeight(CursedDisplay *d){
+int getDisplayHeight(UnicodeScreen *d){
 	return d->settings.pxHeight;
 }
 
-int getDisplayWidth(CursedDisplay *d){
+int getDisplayWidth(UnicodeScreen *d){
 	return d->settings.pxWidth;
 }
 void initColorPairs(short ncolors){
@@ -48,7 +47,7 @@ void initColorPairs(short ncolors){
 
 }
 
-void init_ncurses(CursedDisplay *display){
+void init_ncurses(UnicodeScreen *display){
 	setlocale(LC_ALL, "");
 	BEGIN_CURSES(); // begin curses mode
 	noecho(); // dont care about input for now 
@@ -60,17 +59,17 @@ void init_ncurses(CursedDisplay *display){
 		start_color();
 		use_default_colors();
 	}
-	initColorPairs(N_COLORS);
+	initColorPairs(N_CDCOLORS);
 }
 
-WINDOW *createDisplayWindow(CursedDisplay *display){
+WINDOW *createDisplayWindow(UnicodeScreen *display){
 	const int startX = 0;
 	const int startY = 0;
 	WINDOW * displayWindow = newwin(display->chRows, display->chCols, startY, startX);
 	return displayWindow;
 }
 
-WINDOW *createDebugWindow(CursedDisplay *display){
+WINDOW *createDebugWindow(UnicodeScreen *display){
 	const int startY = display->chRows;
 	const int startX = 0;
 
@@ -91,13 +90,13 @@ void end_ncurses(){
 /* -------- PUBLIC INTERFACING FUNCTIONS -------- */
 /* ---------------------------------------------- */
 
-CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
+UnicodeScreen *createCursedDisplay(UnicodeScreenSettings settings){
 	if (settings.pxHeight<=0 || settings.pxHeight%2!=0 || settings.pxWidth<=0){
 		fprintf(stderr, "Error creating display, bad input for display settings. Returning null.\n");
 		return NULL;
 	}
 
-	CursedDisplay *display = malloc(sizeof(CursedDisplay));
+	UnicodeScreen *display = malloc(sizeof(UnicodeScreen));
 	if (display==NULL){
 		fprintf(stderr, "Error allocating space for display. Returning null.\n");
 		return NULL;
@@ -108,7 +107,6 @@ CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
 
 
 	display->frameBuffer = malloc(sizeof(CDCOLOR *) * display->settings.pxHeight);
-//	printf("Allocated space for %d rows.\n", display->settings.pxHeight);
 	if (display->frameBuffer==NULL){
 		fprintf(stderr, "Error allocating space for display framebuf. Returning null.\n");
 		free(display);
@@ -129,14 +127,13 @@ CursedDisplay *createCursedDisplay(CursedDisplaySettings settings){
 		}
 	}
 
-	init_ncurses(display); // do this at the end so we dont fuck with stdout 
+	init_ncurses(display); // do this at the end so we dont ruin stdout 
 	display->displayWindow = createDisplayWindow(display);
 	display->debugWindow = createDebugWindow(display);
-	
 	return display;
 }
 
-void printDisplay(CursedDisplay *display){
+void printDisplay(UnicodeScreen *display){
 	if (display == NULL){
 		fprintf(stderr, "Error printing display, nullptr passed.\n");
 	} else {
@@ -153,7 +150,7 @@ void printDisplay(CursedDisplay *display){
 	}
 }
 
-void destroyCursedDisplay(CursedDisplay *display){
+void destroyCursedDisplay(UnicodeScreen *display){
 	// cleanup ncurses
 	end_ncurses();
 	delwin(display->displayWindow);
@@ -167,15 +164,15 @@ void destroyCursedDisplay(CursedDisplay *display){
 	display = NULL;
 }
 
-CDCOLOR getPixel(CursedDisplay *display, int py, int px){
+CDCOLOR getPixel(UnicodeScreen *display, int py, int px){
 	return display->frameBuffer[py][px];
 }
-void setPixel(CursedDisplay *display, int py, int px, CDCOLOR col){
+void setPixel(UnicodeScreen *display, int py, int px, CDCOLOR col){
 	display->frameBuffer[py][px] = col;
 	return; 
 }
 
-void refreshDisplay(CursedDisplay *display, float minRefreshTime){
+void refreshDisplay(UnicodeScreen *display, float minRefreshTime){
 	for (int py = 0; py<display->settings.pxHeight-1; py+=2){
 		for (int px = 0; px<display->settings.pxWidth; px++){
 			CDCOLOR top_pixel_color = getPixel(display, py, px);
@@ -191,7 +188,7 @@ void refreshDisplay(CursedDisplay *display, float minRefreshTime){
 	wrefresh(display->debugWindow);
 }
 
-void waitForInput(CursedDisplay *display){
+void waitForInput(UnicodeScreen *display){
 	wgetch(display->displayWindow);
 }
 
@@ -201,7 +198,7 @@ static void dump_wstr(const wchar_t *ws){
         printf("U+%04X\'%lc\'\r", (unsigned int)ws[i],  ws[i]);
     }
 }
-void dump_display_window(CursedDisplay *display){
+void dump_display_window(UnicodeScreen *display){
 	printf("\n\r----- DISPLAY DUMP -----\n\r");
 	wchar_t thb[2];
 	wchar_t sp[2];
@@ -231,7 +228,7 @@ void dump_display_window(CursedDisplay *display){
 		printf("\r\n");
 	}
 }
-void writeToDebugWindow(CursedDisplay *display, int line, const char* fmt, ...){
+void writeToDebugWindow(UnicodeScreen *display, int line, const char* fmt, ...){
 	if (line >= DEBUG_WIN_ROWS){
 		mvwprintw(display->debugWindow, 0, 0, "DEBUGLINE_ERR");
 	} else {

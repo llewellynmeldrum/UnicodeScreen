@@ -26,7 +26,7 @@
 # -----------------------------------------------------------------------------
 
 # Final executable name (no path)
-PROJECT       := ppm2cursed
+PROJECT       := img2uniscr 
 
 # Directory names (relative paths). DO NOT end with a slash.
 SRCDIR        := src

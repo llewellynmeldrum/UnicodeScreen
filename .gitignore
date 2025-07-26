@@ -1,3 +1,4 @@
 .DS_Store
-ppm2cursed
+img2uniscr
 .cache/*
+build/*

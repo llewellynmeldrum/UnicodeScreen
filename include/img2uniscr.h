@@ -1,5 +1,5 @@
-#ifndef PPM2CURSED_H
-#define PPM2CURSED_H
+#ifndef IMG2UNISCR_H
+#define IMG2UNISCR_H
 
 #include <stdint.h>
 
@@ -17,4 +17,4 @@ typedef struct image{
 }Image;
 
 
-#endif // PPM2CURSED_H
+#endif // IMG2UNISCR_H
