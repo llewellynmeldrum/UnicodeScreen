@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+typedef struct aspect_ratio{
+	int x;
+	int y;
+}AspectRatio ;
+
 typedef struct rgb{
 	uint8_t r;
 	uint8_t g;
@@ -10,9 +15,10 @@ typedef struct rgb{
 } RGB;
 
 typedef struct image{
-	RGB* pixels;
+	RGB* pixelsCM;
 	int height;
 	int width;
+	AspectRatio aspectRatio;
 	int errorOccured;
 } Image;
 

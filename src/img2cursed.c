@@ -6,20 +6,28 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+// external libraries
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize2.h"
+
 
 #define DEBUG
 #define IMG_ERROR -1
-#define USAGE_STR "<path/to/image.ppm>"
+#define USAGE_STR "<path/to/image>"
+
 
 #define println(fmt, ...) printf(fmt "\r\n", ##__VA_ARGS__)
 
 
 RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);
 Image openPPM(const char* path);
+Image openImage(const char* path);
 int indexIntoFlatCM(int y, int x, int width);
 int pushImageToDisplay(UnicodeScreen *display, Image image);
 CDCOLOR getClosestCDCOLOR(RGB pixel);
-void initCDCOLOR_RGBVAL();
+void INITCDCOLOR_RGBVAL();
 
 char CDCOLOR_str[N_CDCOLORS][7] = {
         "BLACK",
@@ -31,6 +39,7 @@ char CDCOLOR_str[N_CDCOLORS][7] = {
         "CYAN",
         "WHITE",
 };
+
 void printCDCOLOR(CDCOLOR col){
 	if (col<0 || col>CDCOLOR_MAX){
 		printf("[INVALID_CDCOLOR]");
@@ -44,23 +53,24 @@ void printRGB(RGB col){
 }
 
 int main(int argc, char** argv){
+	INITCDCOLOR_RGBVAL();
 	if (argc!=2){
 		fprintf(stderr, "Incorrect usage. Try: %s %s\n", argv[0], USAGE_STR);
 		exit(EXIT_FAILURE);
 	}
-	initCDCOLOR_RGBVAL();
 	char* image_path = argv[1];
-
-	Image image = openPPM(image_path);
+	Image image = openImage(image_path); 
 
 	if (image.errorOccured){
-		fprintf(stderr, "FAILED TO OPEN FILE %s.\n", image_path); 
+		fprintf(stderr, "Failed to open file <%s>.\n", image_path); 
 		exit(EXIT_FAILURE);
 	}
+
 	UnicodeScreenSettings displaySettings = (UnicodeScreenSettings){
 		.pxHeight = image.height,
 		.pxWidth = image.width,
 	};
+
 
 	UnicodeScreen *display = createCursedDisplay(displaySettings);
 	if (display==NULL){
@@ -77,6 +87,39 @@ int main(int argc, char** argv){
 
 
 
+Image openImage(const char* path){
+	// if im able to discern some stuff from users terminal i can make this a custom value
+	const int max_img_width = 128;
+	const int max_img_height = 64;
+
+	// Open image, set fields...
+	
+	Image image;
+	if (image.width>max_img_width){
+		// Resize image such that 
+		//	newWidth = max_img_width
+		//	newHeight = (newWidth/aspectRatio.x)*aspectRatio.y
+	}
+
+	if (image.height>max_img_height){
+		// Resize image such that
+		//	newHeight = max_img_height
+		//	newWidth = (newHeight/aspectRatio.y)*aspectRatio.x
+
+	}
+
+	if (image.height%2!=0){
+		image.height += 1;
+
+		// Set bottom row of pixels to black...
+
+	}
+
+
+	return (Image){};
+}
+
+
 int pushImageToDisplay(UnicodeScreen *display, Image image){
 	int displayHeight = getDisplayHeight(display);
 	int displayWidth = getDisplayWidth(display);
@@ -86,7 +129,7 @@ int pushImageToDisplay(UnicodeScreen *display, Image image){
 	for (int y = 0; y<displayHeight; y++){
 		for (int x = 0; x<displayWidth; x++){
 			int i = indexIntoFlatCM(y, x, displayWidth); 
-			CDCOLOR col = getClosestCDCOLOR(image.pixels[i]);
+			CDCOLOR col = getClosestCDCOLOR(image.pixelsCM[i]);
 			setPixel(display, x,y, col);
 		}
 	}
@@ -129,7 +172,7 @@ Image openPPM(const char* path){
 		}
 	}
 	Image image = (Image){
-		.pixels = pixels, 
+		.pixelsCM = pixels, 
 		.height = height, 
 		.width  =  width, 
 		.errorOccured = err,
@@ -201,7 +244,7 @@ static void fskipwhitespace(FILE *fp){
 int indexIntoFlatCM(int y, int x, int width){
 	return (x*width) + y;
 }
-void initCDCOLOR_RGBVAL(){
+void INITCDCOLOR_RGBVAL(){
 	CDCOLOR_RGBVAL[CDCOLOR_BLACK]	=	(RGB){0,   0,   0  };
 	CDCOLOR_RGBVAL[CDCOLOR_RED]	=	(RGB){153, 0,   0  };
 	CDCOLOR_RGBVAL[CDCOLOR_GREEN]	=	(RGB){0,   166, 0  };
