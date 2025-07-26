@@ -2,6 +2,7 @@
 Turns your terminal into a (terrible) screen, making use of the "▀" unicode glyph, each row of your terminal becomes two rows of 3-bit RGB pixels. 
 testing
 <img src="assets/examples/tinycat_ppm.png" alt="Demonstration screenshot showing cat." width="600"/>
+
 *here you can see the *beautiful* 3 bit color depth.*
 
 # Usage 
