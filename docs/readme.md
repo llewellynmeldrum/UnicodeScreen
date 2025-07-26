@@ -1,5 +1,4 @@
 # img2uniscr 
----
 Turns your terminal into a (terrible) screen, making use of the "▀" unicode glyph, each row of your terminal becomes two rows of 3-bit RGB pixels. 
 
 # Usage 
