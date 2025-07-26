@@ -14,7 +14,7 @@ typedef struct image{
 	int height;
 	int width;
 	int errorOccured;
-}Image;
+} Image;
 
 
 #endif // IMG2UNISCR_H

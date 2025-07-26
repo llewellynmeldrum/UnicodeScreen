@@ -5,13 +5,10 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#define DISPLAY_HEIGHT 40
-#define DISPLAY_WIDTH 40
+
 
 #define DEBUG
 #define IMG_ERROR -1
-#define OUTPUT_FILE_PATH "output.txt"
-
 #define USAGE_STR "<path/to/image.ppm>"
 
 #define println(fmt, ...) printf(fmt "\r\n", ##__VA_ARGS__)
@@ -54,7 +51,6 @@ int main(int argc, char** argv){
 	initCDCOLOR_RGBVAL();
 	char* image_path = argv[1];
 
-	int imageHeight, imageWidth;
 	Image image = openPPM(image_path);
 
 	if (image.errorOccured){
@@ -119,12 +115,18 @@ CDCOLOR getClosestCDCOLOR(RGB pixel){
 
 Image openPPM(const char* path){
 	FILE *fptr = fopen(path, "rb");
-	int height, width, err;
-	err = 0;
-	RGB* pixels = getPixels_PPM(fptr, &height, &width); 
-	if (pixels==NULL){
+	int height, width;
+	int err = 0;
+	RGB* pixels;
+	if (fptr==NULL){
 		fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
 		err = IMG_ERROR;
+	} else {
+		pixels = getPixels_PPM(fptr, &height, &width); 
+		if (pixels==NULL){
+			fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
+			err = IMG_ERROR;
+		}
 	}
 	Image image = (Image){
 		.pixels = pixels, 

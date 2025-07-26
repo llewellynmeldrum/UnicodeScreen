@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Iinclude",
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-c",
+      "-I",
+      "/usr/local/include",
+      "-o",
+      "build/UniScreen.o",
+      "src/UniScreen.c"
+    ],
+    "directory": "/Users/llewie/homemadetools/img2uniscr",
+    "file": "/Users/llewie/homemadetools/img2uniscr/src/UniScreen.c",
+    "output": "/Users/llewie/homemadetools/img2uniscr/build/UniScreen.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Iinclude",
+      "-std=c11",
+      "-O0",
+      "-g3",
+      "-c",
+      "-I",
+      "/usr/local/include",
+      "-o",
+      "build/img2cursed.o",
+      "src/img2cursed.c"
+    ],
+    "directory": "/Users/llewie/homemadetools/img2uniscr",
+    "file": "/Users/llewie/homemadetools/img2uniscr/src/img2cursed.c",
+    "output": "/Users/llewie/homemadetools/img2uniscr/build/img2cursed.o"
+  }
+]
