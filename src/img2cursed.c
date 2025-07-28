@@ -102,11 +102,15 @@ RGB24Image openImage(const char* path){
 
 	int in_width, in_height, channels;
 	stb_image_t in_stb_img = stbi_load(path, &in_width, &in_height, &channels, 3);
-	if (in_stb_img == NULL 
-		|| in_width > max_img_width || in_height > max_img_height){
-		// TODO: REMOVE ABOVE CONDITION WHEN RESIZING IS FIXED 
+	if (in_stb_img == NULL){
 		return RET_RGB24_IMG_ERR; 
 	} 
+
+	if (in_width > max_img_width || in_height > max_img_height){
+		// TODO: REMOVE ABOVE CONDITION WHEN RESIZING IS FIXED 
+		println("ERROR: image dimensions >96, (%d,%d) unsupported. View readme/constraints for details.",in_width,in_height);
+		return RET_RGB24_IMG_ERR; 
+	}
 	println("%s loaded, w=%dpx, h=%dpx, num_channels=%d", path, in_width, in_height, channels);
 	
 	RGB24Image image = (RGB24Image){
