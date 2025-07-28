@@ -1,5 +1,7 @@
 .DS_Store
+assets/.DS_Store
 img2uniscr
 .cache/*
 build/*
 tommorow.md
+sandbox
