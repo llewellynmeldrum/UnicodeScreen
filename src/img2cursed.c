@@ -18,6 +18,9 @@
 #define RET_RGB24_IMG_ERR (RGB24Image){.errorOccured = true};
 #define USAGE_STR "<path/to/image>"
 
+
+#define SCALING_IS_BROKEN
+
 RGB24* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);	// deprecated
 RGB24Image openPPM(const char* path);				// deprecated
 // TODO: delete when generic openImage is implemented.
@@ -106,11 +109,14 @@ RGB24Image openImage(const char* path){
 		return RET_RGB24_IMG_ERR; 
 	} 
 
+#ifndef SCALING_IS_BROKEN
 	if (in_width > max_img_width || in_height > max_img_height){
 		// TODO: REMOVE ABOVE CONDITION WHEN RESIZING IS FIXED 
 		println("ERROR: image dimensions >96, (%d,%d) unsupported. View readme/constraints for details.",in_width,in_height);
 		return RET_RGB24_IMG_ERR; 
 	}
+#endif 
+
 	println("%s loaded, w=%dpx, h=%dpx, num_channels=%d", path, in_width, in_height, channels);
 	
 	RGB24Image image = (RGB24Image){
@@ -127,9 +133,7 @@ RGB24Image openImage(const char* path){
 	if (image.width>max_img_width){
 		new_width = max_img_width; 
 		new_height = (new_width/image.aspectRatio.x)*image.aspectRatio.y;
-	} 
-
-	if (image.height>max_img_height){
+	} else if (image.height>max_img_height){
 		new_height = max_img_height; 
 		new_width = (new_height/image.aspectRatio.y)*image.aspectRatio.x;
 	}
@@ -138,14 +142,17 @@ RGB24Image openImage(const char* path){
 
 	stb_image_t size_fixed_stb_img = (stb_image_t)stbir_resize_uint8_srgb(
 		in_stb_img, in_width, in_height, 0,
-		NULL, new_width, new_height, 0, STBIR_BGR
+		NULL, new_width, new_height, 0, STBIR_RGB
 	);
+	image.height = new_height; 
+	image.width = new_width; 
 
 	bool oddheightfixed;
 	if (image.height%2!=0){
 		image.height += 1;
 		oddheightfixed = true;
 	}
+
 	image.pixelsRM = malloc(sizeof(RGB24) * image.height * image.width);
 
 	for (int y = 0; y<new_height; y++){

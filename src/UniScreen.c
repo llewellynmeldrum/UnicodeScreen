@@ -66,6 +66,7 @@ WINDOW *createDisplayWindow(UnicodeScreen *display){
 	const int startX = 0;
 	const int startY = 0;
 	WINDOW * displayWindow = newwin(display->chRows, display->chCols, startY, startX);
+	printf("\r\n NCURSES WIN: %d ROWS, %d COLS\n\r", display->chCols, display->chRows);
 	return displayWindow;
 }
 
