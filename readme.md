@@ -26,7 +26,7 @@ And it should open up in glorious 3 bit color!
 <img src="assets/examples/meowth_png.png" alt="Demonstration screenshot showing meowth from pokemon." width="600"/>
 
 > [!NOTE] 
-> *if you see repeated strings of �, this is probably your terminal trying to optimise drawing code. I've only observed this in iterm2 so far, so try it out in terminal.*
+> *if you see repeated strings of �, this is probably your terminal trying to optimise drawing code. I've only observed this in iterm2 so far, so try it out in terminal if youre on mac.*
 
 
 # Constraints

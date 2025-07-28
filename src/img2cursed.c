@@ -102,7 +102,9 @@ RGB24Image openImage(const char* path){
 
 	int in_width, in_height, channels;
 	stb_image_t in_stb_img = stbi_load(path, &in_width, &in_height, &channels, 3);
-	if (in_stb_img == NULL){
+	if (in_stb_img == NULL 
+		|| in_width > max_img_width || in_height > max_img_height){
+		// TODO: REMOVE ABOVE CONDITION WHEN RESIZING IS FIXED 
 		return RET_RGB24_IMG_ERR; 
 	} 
 	println("%s loaded, w=%dpx, h=%dpx, num_channels=%d", path, in_width, in_height, channels);
