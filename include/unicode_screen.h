@@ -17,9 +17,9 @@ typedef enum{
 
 #define N_CDCOLORS 8
 #define CDCOLOR_MAX 7 
-#define RGB_MAX 255 
+#define RGB24_MAX 255 
 
-RGB CDCOLOR_RGBVAL[N_CDCOLORS];
+RGB24 CDCOLOR_RGBVAL[N_CDCOLORS];
 
 
 

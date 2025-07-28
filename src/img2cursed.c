@@ -9,6 +9,7 @@
 // external libraries
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize2.h"
 
@@ -18,39 +19,24 @@
 #define USAGE_STR "<path/to/image>"
 
 
+
+RGB24Image openPPM(const char* path);
+RGB24Image openImage(const char* path);
+int indexIntoFlatCM(int y, int x, int width);
+int pushImageToDisplay(RGB24Image image, UnicodeScreen *display);
+
+CDCOLOR getClosestCDCOLOR(RGB24 pixel);
+static void INITCDCOLOR_RGBVAL();
+static void printCDCOLOR(CDCOLOR col);
+static void printRGB24(RGB24 col);
+
+// deprecated
+RGB24* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);
+
+char CDCOLOR_str[N_CDCOLORS][7] = { "BLACK", "RED", "GREEN", "YELLOW", "BLUE", "PURPLE", "CYAN", "WHITE",};
 #define println(fmt, ...) printf(fmt "\r\n", ##__VA_ARGS__)
 
 
-RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);
-Image openPPM(const char* path);
-Image openImage(const char* path);
-int indexIntoFlatCM(int y, int x, int width);
-int pushImageToDisplay(UnicodeScreen *display, Image image);
-CDCOLOR getClosestCDCOLOR(RGB pixel);
-void INITCDCOLOR_RGBVAL();
-
-char CDCOLOR_str[N_CDCOLORS][7] = {
-        "BLACK",
-        "RED",
-        "GREEN",
-        "YELLOW",
-        "BLUE",
-        "PURPLE",
-        "CYAN",
-        "WHITE",
-};
-
-void printCDCOLOR(CDCOLOR col){
-	if (col<0 || col>CDCOLOR_MAX){
-		printf("[INVALID_CDCOLOR]");
-	} else {
-		printf("%s",CDCOLOR_str[col]);
-	}
-}
-
-void printRGB(RGB col){
-	printf("[%hhu,%hhu,%hhu]",col.r,col.g,col.b);
-}
 
 int main(int argc, char** argv){
 	INITCDCOLOR_RGBVAL();
@@ -59,7 +45,7 @@ int main(int argc, char** argv){
 		exit(EXIT_FAILURE);
 	}
 	char* image_path = argv[1];
-	Image image = openImage(image_path); 
+	RGB24Image image = openImage(image_path); 
 
 	if (image.errorOccured){
 		fprintf(stderr, "Failed to open file <%s>.\n", image_path); 
@@ -77,7 +63,8 @@ int main(int argc, char** argv){
 		fprintf(stderr, "Exiting.\n"); 
 		exit(EXIT_FAILURE);
 	}
-	pushImageToDisplay(display, image);
+
+	pushImageToDisplay(image, display);
 	refreshDisplay(display, 0);
 	waitForInput(display);
 	destroyCursedDisplay(display);
@@ -87,14 +74,14 @@ int main(int argc, char** argv){
 
 
 
-Image openImage(const char* path){
+RGB24Image openImage(const char* path){
 	// if im able to discern some stuff from users terminal i can make this a custom value
 	const int max_img_width = 128;
 	const int max_img_height = 64;
 
 	// Open image, set fields...
 	
-	Image image;
+	RGB24Image image;
 	if (image.width>max_img_width){
 		// Resize image such that 
 		//	newWidth = max_img_width
@@ -116,11 +103,11 @@ Image openImage(const char* path){
 	}
 
 
-	return (Image){};
+	return (RGB24Image){};
 }
 
 
-int pushImageToDisplay(UnicodeScreen *display, Image image){
+int pushImageToDisplay(RGB24Image image, UnicodeScreen *display){
 	int displayHeight = getDisplayHeight(display);
 	int displayWidth = getDisplayWidth(display);
 	if (displayHeight != image.height || displayWidth != image.width){
@@ -136,13 +123,13 @@ int pushImageToDisplay(UnicodeScreen *display, Image image){
 	return 0; 
 }
 
-CDCOLOR getClosestCDCOLOR(RGB pixel){
+CDCOLOR getClosestCDCOLOR(RGB24 pixel){
 	// the nearest color has the lowest summary difference in colors.
 	// i.e rDiff + gDiff + bDiff < all the others.
-	uint32_t min_diffsum = RGB_MAX;
+	uint32_t min_diffsum = RGB24_MAX;
 	int nearestcol_idx = 0;
 	for (int i = 0; i<N_CDCOLORS; i++){
-		RGB col = CDCOLOR_RGBVAL[i];
+		RGB24 col = CDCOLOR_RGBVAL[i];
 		uint32_t rDiff = abs(pixel.r - col.r);
 		uint32_t gDiff = abs(pixel.g - col.g);
 		uint32_t bDiff = abs(pixel.b - col.b);
@@ -155,12 +142,12 @@ CDCOLOR getClosestCDCOLOR(RGB pixel){
 	return nearestcol_idx;
 }
 
-
-Image openPPM(const char* path){
+// deprecated 
+RGB24Image openPPM(const char* path){
 	FILE *fptr = fopen(path, "rb");
 	int height, width;
 	int err = 0;
-	RGB* pixels;
+	RGB24* pixels;
 	if (fptr==NULL){
 		fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
 		err = IMG_ERROR;
@@ -171,7 +158,7 @@ Image openPPM(const char* path){
 			err = IMG_ERROR;
 		}
 	}
-	Image image = (Image){
+	RGB24Image image = (RGB24Image){
 		.pixelsCM = pixels, 
 		.height = height, 
 		.width  =  width, 
@@ -187,7 +174,8 @@ int fscan_StringToInt(FILE* fp){
 	return atoi(temp); 
 }
 
-RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p){ 
+// deprecated 
+RGB24* getPixels_PPM(FILE* fptr, int *height_p, int* width_p){ 
 //	printf("\n\r"); // fixes broken carriage return shit
 	char P, six; 
 	fscanf(fptr, "%c%c", &P, &six);
@@ -212,7 +200,7 @@ RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p){
 	}
 	//fseek(fptr, 1, SEEK_CUR);
 
-	RGB* RGB_grid = malloc(sizeof(RGB) * height * width);
+	RGB24* RGB24_grid = malloc(sizeof(RGB24) * height * width);
 
 	for (int y = 0; y<height; y++){
 		for (int x = 0; x<width; x++){
@@ -222,11 +210,11 @@ RGB* getPixels_PPM(FILE* fptr, int *height_p, int* width_p){
 			fread(&r, byte_size, 1, fptr);
 			fread(&g, byte_size, 1, fptr);
 			fread(&b, byte_size, 1, fptr);
-			RGB_grid[i] = (RGB){ r,g,b };
+			RGB24_grid[i] = (RGB24){ r,g,b };
 	//		println("[%03d]: %02X %02X %02X", i, r,g,b);
 		}
 	}
-	return RGB_grid;
+	return RGB24_grid;
 }
 
 
@@ -241,16 +229,30 @@ static void fskipwhitespace(FILE *fp){
 	}
 	println("FPOS AFTER: %ld", ftell(fp));
 }
+
 int indexIntoFlatCM(int y, int x, int width){
 	return (x*width) + y;
 }
+
 void INITCDCOLOR_RGBVAL(){
-	CDCOLOR_RGBVAL[CDCOLOR_BLACK]	=	(RGB){0,   0,   0  };
-	CDCOLOR_RGBVAL[CDCOLOR_RED]	=	(RGB){153, 0,   0  };
-	CDCOLOR_RGBVAL[CDCOLOR_GREEN]	=	(RGB){0,   166, 0  };
-	CDCOLOR_RGBVAL[CDCOLOR_YELLOW]	=	(RGB){153, 153, 0  };
-	CDCOLOR_RGBVAL[CDCOLOR_BLUE]	=	(RGB){0,   0,   178};
-	CDCOLOR_RGBVAL[CDCOLOR_PURPLE]	=	(RGB){178, 0,   178};
-	CDCOLOR_RGBVAL[CDCOLOR_CYAN]	=	(RGB){0,   166, 178};
-	CDCOLOR_RGBVAL[CDCOLOR_WHITE]	=	(RGB){191, 191, 191};
+	CDCOLOR_RGBVAL[CDCOLOR_BLACK]	=	(RGB24){0,   0,   0  };
+	CDCOLOR_RGBVAL[CDCOLOR_RED]	=	(RGB24){153, 0,   0  };
+	CDCOLOR_RGBVAL[CDCOLOR_GREEN]	=	(RGB24){0,   166, 0  };
+	CDCOLOR_RGBVAL[CDCOLOR_YELLOW]	=	(RGB24){153, 153, 0  };
+	CDCOLOR_RGBVAL[CDCOLOR_BLUE]	=	(RGB24){0,   0,   178};
+	CDCOLOR_RGBVAL[CDCOLOR_PURPLE]	=	(RGB24){178, 0,   178};
+	CDCOLOR_RGBVAL[CDCOLOR_CYAN]	=	(RGB24){0,   166, 178};
+	CDCOLOR_RGBVAL[CDCOLOR_WHITE]	=	(RGB24){191, 191, 191};
+}
+
+void printCDCOLOR(CDCOLOR col){
+	if (col<0 || col>CDCOLOR_MAX){
+		printf("[INVALID_CDCOLOR]");
+	} else {
+		printf("%s",CDCOLOR_str[col]);
+	}
+}
+
+void printRGB24(RGB24 col){
+	printf("[%hhu,%hhu,%hhu]",col.r,col.g,col.b);
 }

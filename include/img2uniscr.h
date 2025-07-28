@@ -12,15 +12,15 @@ typedef struct rgb{
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
-} RGB;
+} RGB24;
 
 typedef struct image{
-	RGB* pixelsCM;
+	RGB24* pixelsCM;
 	int height;
 	int width;
 	AspectRatio aspectRatio;
 	int errorOccured;
-} Image;
+} RGB24Image;
 
 
 #endif // IMG2UNISCR_H
