@@ -15,7 +15,7 @@ typedef struct rgb{
 } RGB24;
 
 typedef struct image{
-	RGB24* pixelsCM;
+	RGB24* pixelsRM; // row major, flat packing
 	int height;
 	int width;
 	AspectRatio aspectRatio;

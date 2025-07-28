@@ -15,25 +15,27 @@
 
 
 #define DEBUG
-#define IMG_ERROR -1
+#define RET_RGB24_IMG_ERR (RGB24Image){.errorOccured = true};
 #define USAGE_STR "<path/to/image>"
 
+RGB24* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);	// deprecated
+RGB24Image openPPM(const char* path);				// deprecated
+// TODO: delete when generic openImage is implemented.
 
 
-RGB24Image openPPM(const char* path);
-RGB24Image openImage(const char* path);
-int indexIntoFlatCM(int y, int x, int width);
-int pushImageToDisplay(RGB24Image image, UnicodeScreen *display);
+static RGB24Image openImage(const char* path);
+static int indexIntoFlatRM(int y, int x, int width);
+static int pushImageToDisplay(RGB24Image image, UnicodeScreen *display);
 
-CDCOLOR getClosestCDCOLOR(RGB24 pixel);
+static CDCOLOR getClosestCDCOLOR(RGB24 pixel);
 static void INITCDCOLOR_RGBVAL();
 static void printCDCOLOR(CDCOLOR col);
 static void printRGB24(RGB24 col);
+static void printRGB24_HEX(RGB24 col);
 
-// deprecated
-RGB24* getPixels_PPM(FILE* fptr, int *height_p, int* width_p);
-
+static int indexIntoFlatRM_3CHANNEL(int y, int x, int width);
 char CDCOLOR_str[N_CDCOLORS][7] = { "BLACK", "RED", "GREEN", "YELLOW", "BLUE", "PURPLE", "CYAN", "WHITE",};
+
 #define println(fmt, ...) printf(fmt "\r\n", ##__VA_ARGS__)
 
 
@@ -73,51 +75,107 @@ int main(int argc, char** argv){
 }
 
 
+/* credit my brother Euclid o7 */
+int calc_gcd(int a, int b){
+	int t;
+	while (b!=0){
+		t = b;
+		b = a%b;
+		a = t;
+	}
+	return a;
+}
+
+AspectRatio calcAspectRatio(int w, int h){
+	int gcd = calc_gcd(w,h);
+	int x = w/gcd;
+	int y = h/gcd;
+	return (AspectRatio){.x = x, .y = y};
+}
 
 RGB24Image openImage(const char* path){
 	// if im able to discern some stuff from users terminal i can make this a custom value
-	const int max_img_width = 128;
-	const int max_img_height = 64;
+	const int max_img_width = 96;
+	const int max_img_height = 96;
 
-	// Open image, set fields...
+	typedef unsigned char* stb_image_t;
+
+	int in_width, in_height, channels;
+	stb_image_t in_stb_img = stbi_load(path, &in_width, &in_height, &channels, 3);
+	if (in_stb_img == NULL){
+		return RET_RGB24_IMG_ERR; 
+	} 
+	println("%s loaded, w=%dpx, h=%dpx, num_channels=%d", path, in_width, in_height, channels);
 	
-	RGB24Image image;
+	RGB24Image image = (RGB24Image){
+		.height = in_height,
+		.width = in_width, 
+		.aspectRatio = calcAspectRatio(in_width, in_height),
+		.pixelsRM = NULL, 
+		.errorOccured = false,
+	};
+
+	int new_width = image.width;
+	int new_height = image.height;
+
 	if (image.width>max_img_width){
-		// Resize image such that 
-		//	newWidth = max_img_width
-		//	newHeight = (newWidth/aspectRatio.x)*aspectRatio.y
-	}
+		new_width = max_img_width; 
+		new_height = (new_width/image.aspectRatio.x)*image.aspectRatio.y;
+	} 
 
 	if (image.height>max_img_height){
-		// Resize image such that
-		//	newHeight = max_img_height
-		//	newWidth = (newHeight/aspectRatio.y)*aspectRatio.x
-
+		new_height = max_img_height; 
+		new_width = (new_height/image.aspectRatio.y)*image.aspectRatio.x;
 	}
 
+	println("%s resizing to, w=%dpx, h=%dpx", path, new_width, new_height);
+
+	stb_image_t size_fixed_stb_img = (stb_image_t)stbir_resize_uint8_srgb(
+		in_stb_img, in_width, in_height, 0,
+		NULL, new_width, new_height, 0, STBIR_BGR
+	);
+
+	bool oddheightfixed;
 	if (image.height%2!=0){
 		image.height += 1;
+		oddheightfixed = true;
+	}
+	image.pixelsRM = malloc(sizeof(RGB24) * image.height * image.width);
 
-		// Set bottom row of pixels to black...
-
+	for (int y = 0; y<new_height; y++){
+		for (int x = 0; x<new_width; x++){
+			int i = indexIntoFlatRM_3CHANNEL(y, x, new_width);
+			int i_nochan = indexIntoFlatRM(y, x, new_width);
+			unsigned char r = size_fixed_stb_img[i]; 
+			unsigned char g = size_fixed_stb_img[i+1]; 
+			unsigned char b = size_fixed_stb_img[i+2]; 
+			image.pixelsRM[i_nochan] = (RGB24){r, g, b};
+		}
 	}
 
+	free(size_fixed_stb_img);
+	free(in_stb_img);
 
-	return (RGB24Image){};
+	if (oddheightfixed){
+		int y = new_height;
+		for (int x = 0; x<new_width; x++){
+			int i = indexIntoFlatRM(y,x,image.width);
+			image.pixelsRM[i] = (RGB24){0,0,0};
+		}
+	}
+
+	return image;
 }
 
 
 int pushImageToDisplay(RGB24Image image, UnicodeScreen *display){
 	int displayHeight = getDisplayHeight(display);
 	int displayWidth = getDisplayWidth(display);
-	if (displayHeight != image.height || displayWidth != image.width){
-		println("WARNING!!! DISPLAY DIMENSIONS DO NOT MATCH IMAGE DIMENSIONS!!!");
-	}
 	for (int y = 0; y<displayHeight; y++){
 		for (int x = 0; x<displayWidth; x++){
-			int i = indexIntoFlatCM(y, x, displayWidth); 
-			CDCOLOR col = getClosestCDCOLOR(image.pixelsCM[i]);
-			setPixel(display, x,y, col);
+			int i = indexIntoFlatRM(y, x, displayHeight); 
+			CDCOLOR col = getClosestCDCOLOR(image.pixelsRM[i]);
+			setPixel(display, y,x, col);
 		}
 	}
 	return 0; 
@@ -150,16 +208,16 @@ RGB24Image openPPM(const char* path){
 	RGB24* pixels;
 	if (fptr==NULL){
 		fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
-		err = IMG_ERROR;
+		err = true;
 	} else {
 		pixels = getPixels_PPM(fptr, &height, &width); 
 		if (pixels==NULL){
 			fprintf(stderr, "\n\rError, file header is corrupted or image is not PPM format. Exiting.\n\r");
-			err = IMG_ERROR;
+			err = true;
 		}
 	}
 	RGB24Image image = (RGB24Image){
-		.pixelsCM = pixels, 
+		.pixelsRM = pixels, 
 		.height = height, 
 		.width  =  width, 
 		.errorOccured = err,
@@ -230,9 +288,14 @@ static void fskipwhitespace(FILE *fp){
 	println("FPOS AFTER: %ld", ftell(fp));
 }
 
-int indexIntoFlatCM(int y, int x, int width){
-	return (x*width) + y;
+static int indexIntoFlatRM(int y, int x, int width){
+	return (y*width) + x;
 }
+static int indexIntoFlatRM_3CHANNEL(int y, int x, int width){
+	int c = 3;
+	return ((y*width) + x)*c;
+}
+
 
 void INITCDCOLOR_RGBVAL(){
 	CDCOLOR_RGBVAL[CDCOLOR_BLACK]	=	(RGB24){0,   0,   0  };
@@ -255,4 +318,7 @@ void printCDCOLOR(CDCOLOR col){
 
 void printRGB24(RGB24 col){
 	printf("[%hhu,%hhu,%hhu]",col.r,col.g,col.b);
+}
+void printRGB24_HEX(RGB24 col){
+	printf("%02hhx%02hhx%02hhx ",col.r,col.g,col.b);
 }
