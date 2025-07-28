@@ -127,15 +127,15 @@ RGB24Image openImage(const char* path){
 		.errorOccured = false,
 	};
 
+
 	int new_width = image.width;
 	int new_height = image.height;
 
-	if (image.width>max_img_width){
-		new_width = max_img_width; 
-		new_height = (new_width/image.aspectRatio.x)*image.aspectRatio.y;
-	} else if (image.height>max_img_height){
-		new_height = max_img_height; 
-		new_width = (new_height/image.aspectRatio.y)*image.aspectRatio.x;
+	while (new_width>max_img_width || new_height>max_img_height || new_width%2!=0 || new_height%2!=0){
+		println("scaling down from: %d %d", new_width, new_height);
+		new_width = (float)new_width * 0.9f;
+		new_height = (float)new_height * 0.9f;
+		println("to: %d %d", new_width, new_height);
 	}
 
 	println("%s resizing to, w=%dpx, h=%dpx", path, new_width, new_height);
@@ -144,14 +144,9 @@ RGB24Image openImage(const char* path){
 		in_stb_img, in_width, in_height, 0,
 		NULL, new_width, new_height, 0, STBIR_RGB
 	);
+
 	image.height = new_height; 
 	image.width = new_width; 
-
-	bool oddheightfixed;
-	if (image.height%2!=0){
-		image.height += 1;
-		oddheightfixed = true;
-	}
 
 	image.pixelsRM = malloc(sizeof(RGB24) * image.height * image.width);
 
@@ -166,10 +161,18 @@ RGB24Image openImage(const char* path){
 		}
 	}
 
+	bool oddheightfixed;
+	if (image.height%2!=0){
+		image.height += 1;
+		oddheightfixed = true;
+	}
+
+
 	free(size_fixed_stb_img);
 	free(in_stb_img);
 
 	if (oddheightfixed){
+		println("Odd height fix applied");
 		int y = new_height;
 		for (int x = 0; x<new_width; x++){
 			int i = indexIntoFlatRM(y,x,image.width);
