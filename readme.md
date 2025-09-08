@@ -1,40 +1,56 @@
 # img2uniscr 
-Turns your terminal into a (terrible) screen, making use of the "▀" unicode glyph, each row of your terminal becomes two rows of 3-bit RGB pixels. 
+Turns your terminal into a text based screen: making use of the "▀" unicode glyph, each row of your terminal becomes two rows of 3-bit RGB pixels. 
 
 <img src="assets/examples/tinycat_ppm.png" alt="Demonstration screenshot showing cat." width="600"/>
 
 *here you can see the *beautiful* 3 bit color depth.*
 
-# how do we get 2 rows of pixels per terminal row? How are they square?
+# How does this work? 
 First, we must understand that any 'glyph' in a font has a bounding box, which determines the area within which it will be drawn.
+Monospace fonts, like those used in terminals, have the unique property of containing bounding boxes of the exact same width for all characters.
 
-Monospace fonts, like those used in terminals usually, have the unique property of containing bounding boxes of the exact same width (and almost always, the same height), for all characters. 
 <img src="assets/s_glyph.png" alt="Bounding boxes of S glyph" width="200"/>
-Keep in mind the idea of a bounding box.
+
 Whilst browsing some unicode characters, I found a rather unique one: the Upper Half Block, aka '▀' (U+2580).
 
 An interesting property of this character is that in most typefaces, its a square, sitting neatly in the upper half of the glyphs bounding box.
 This means that the bottom half of the bounding box also forms a square, if the font is monospaced.
-<img src="assets/bounding_boxes" width="200">
 
-Alongside this, glyphs have customizable properties, which use an interface supported by 90% of modern terminals: ANSI escape sequences.
+<img src="assets/bounding_boxes.png" width="400">
+
+---
+
+Now, we need to which use an interface supported by 90% of modern terminals: 
+
+## ANSI Escape Sequences
+```bash
+echo -e "\033[38;05;34;1mGREEN_TEXT"
+# try this in your terminal.
+
+```
+These allow for setting certain properties of text to be rendered.
 These properties include:
 - color of the foreground (the actual 'stroke' of the glyph)
 - color of the background (the bounding box outside of the glyph)
 - Bold/bright/italic/faint toggles
 
-The exact contents of the escape sequences aren't really relevant, as ncurses abstracts that away. The top answer [here]([url](https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences)) has a good explanation if interested.
+The exact contents of the escape sequences aren't really relevant, as ncurses abstracts that away. The top answer [here](https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences) has a good explanation if interested.
 
+---
+## Putting It Together
 Now, for the moment of truth: we can encode a single character of '▀' with two "pixels":
 - the "upper pixel" could be controlled by setting the foreground (fg) color
 - the "lower pixel" could be controlled by setting the background (bg) color
 Example:
+
 <img src="assets/charwh.png" width="200">
 
 Building this out, we can create images out of ANSI escape codes an a single unicode glyph, '▀'.
+
 <img src="assets/actual_image.png" width="300">
 
 By changing some fg and bg colors:
+
 <img src="assets/actual_image2.png" width="300">
 
 This gives us square pixels, 2 per row, and 1 per column of text in the terminal.
@@ -51,7 +67,7 @@ Necessary to build any branches. Avaliable on homebrew:
 # Usage 
 Pass in an image to the program:
 ```bash
-   ./img2uniscr <path/to/image> 
+   ./img2uniscr [path/to/image]
 ```
 And it should open up in glorious 3 bit color!
 
