@@ -11,9 +11,6 @@ Monospace fonts, like those used in terminals, have the unique property of conta
 
 <img src="assets/s_glyph.png" alt="Bounding boxes of S glyph" width="200"/>
 
-
- ​
-
 Whilst browsing some unicode characters, I found a rather unique one: the Upper Half Block, aka '▀' (U+2580).
 
 An interesting property of this character is that in most typefaces, its a square, sitting neatly in the upper half of the glyphs bounding box.
