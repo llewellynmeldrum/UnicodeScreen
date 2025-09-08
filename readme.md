@@ -5,7 +5,38 @@ Turns your terminal into a (terrible) screen, making use of the "▀" unicode gl
 
 *here you can see the *beautiful* 3 bit color depth.*
 
+# how do we get 2 rows of pixels per terminal row? How are they square?
+First, we must understand that any 'glyph' (character) in a typeface (font) has a sort of 'bounding box', which determines the area within which it will render.
+Monospace fonts, like those used in terminals usually, have the unique property of containing bounding boxes of the exact same width (and almost always, the same height), for all characters.
+<img src="assets/s_glyph.png" alt="Bounding boxes of S glyph" width="200"/>
 
+Whilst browsing some unicode characters, I found a rather unique one: the Upper Half Block, aka '▀' (U+2580).
+
+An interesting property of this character is that in most typefaces, its a square, sitting neatly in the upper half of the glyphs bounding box.
+This means that the bottom half of the bounding box also forms a square, if the font is monospaced.
+<img src="assets/bounding_boxes" width="200">
+
+Alongside this, glyphs have customizable properties, which use an interface supported by 90% of modern terminals: ANSI escape sequences.
+These properties include:
+- color of the foreground (the actual 'stroke' of the glyph)
+- color of the background (the bounding box outside of the glyph)
+- Bold/bright/italic/faint toggles
+
+The exact contents of the escape sequences aren't really relevant, as ncurses abstracts that away. The top answer [here]([url](https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences)) has a good explanation if interested.
+
+Now, for the moment of truth: we can encode a single character of '▀' with two "pixels":
+- the "upper pixel" could be controlled by setting the foreground (fg) color
+- the "lower pixel" could be controlled by setting the background (bg) color
+Example:
+<img src="assets/charwh.png" width="200">
+
+Building this out, we can create images out of ANSI escape codes an a single unicode glyph, '▀'.
+<img src="assets/actual_image.png" width="300">
+
+By changing some fg and bg colors:
+<img src="assets/actual_image2.png" width="300">
+
+This gives us square pixels, 2 per row, and 1 per column of text in the terminal.
 
 # External Build Dependencies
 *TODO: add a cmake to install dependencies automatically.*
