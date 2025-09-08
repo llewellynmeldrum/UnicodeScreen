@@ -6,10 +6,11 @@ Turns your terminal into a (terrible) screen, making use of the "▀" unicode gl
 *here you can see the *beautiful* 3 bit color depth.*
 
 # how do we get 2 rows of pixels per terminal row? How are they square?
-First, we must understand that any 'glyph' (character) in a typeface (font) has a sort of 'bounding box', which determines the area within which it will render.
-Monospace fonts, like those used in terminals usually, have the unique property of containing bounding boxes of the exact same width (and almost always, the same height), for all characters.
-<img src="assets/s_glyph.png" alt="Bounding boxes of S glyph" width="200"/>
+First, we must understand that any 'glyph' in a font has a bounding box, which determines the area within which it will be drawn.
 
+Monospace fonts, like those used in terminals usually, have the unique property of containing bounding boxes of the exact same width (and almost always, the same height), for all characters. 
+<img src="assets/s_glyph.png" alt="Bounding boxes of S glyph" width="200"/>
+Keep in mind the idea of a bounding box.
 Whilst browsing some unicode characters, I found a rather unique one: the Upper Half Block, aka '▀' (U+2580).
 
 An interesting property of this character is that in most typefaces, its a square, sitting neatly in the upper half of the glyphs bounding box.
