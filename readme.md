@@ -108,6 +108,5 @@ Tool to auto generate `compile_commands.json` for LSP to understand the project 
 TODO: Upon completion, add a rough directory breakdown using `tree`.
 
 # Q/A
-## Why c11? 
-Usually just default to c99, figured i'd check out c11. I know it added or improved the _Generic macro for function overloading, I hope to check that out at some point. I also believe it has multithreading improvements, although I cant really imagine using mutlithreading for this project. 
-
+# Why c99?
+Didn't end up needing anything more. c89 has silly syntax.
